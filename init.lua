@@ -82,21 +82,10 @@ vim.opt.scrolloff = 10
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 vim.keymap.set('n', '<leader>cc', '<cmd>bd<CR>', { desc = '[C]lose [C]urrent Buffer' })
 
+vim.keymap.set('i', '<C-z>', '<cmd>u<CR>', { desc = '[U]ndo' })
+
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
-vim.keymap.set('n', '<leader>n', function()
-  local filename = vim.fn.input 'Enter filename: '
-  if filename ~= '' then
-    local path = vim.fn.expand(filename) -- Expand relative paths
-    local dir = vim.fn.fnamemodify(path, ':h') -- Extract directory part
-
-    if dir ~= '' and not vim.fn.isdirectory(dir) then
-      vim.fn.mkdir(dir, 'p') -- Create directory if it doesn't exist
-    end
-
-    vim.cmd('edit ' .. path)
-  end
-end, { desc = 'Create new file/directory' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -158,6 +147,10 @@ vim.opt.rtp:prepend(lazypath)
 --    :Lazy update
 --
 -- NOTE: Here is where you install your plugins.
+local function opts(desc)
+  return { desc = 'nvim-tree: ' .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
+end
+
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
@@ -908,6 +901,89 @@ require('lazy').setup({
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
+  {
+    'nvim-tree/nvim-tree.lua',
+    event = 'VimEnter',
+    opts = {
+      on_attach = function()
+        local api = require 'nvim-tree.api'
+
+        -- BEGIN_DEFAULT_ON_ATTACH
+        vim.keymap.set('n', '<C-]>', api.tree.change_root_to_node, opts 'CD')
+        vim.keymap.set('n', '<C-e>', api.node.open.replace_tree_buffer, opts 'Open: In Place')
+        vim.keymap.set('n', '<C-k>', api.node.show_info_popup, opts 'Info')
+        vim.keymap.set('n', '<C-r>', api.fs.rename_sub, opts 'Rename: Omit Filename')
+        vim.keymap.set('n', '<C-t>', api.node.open.tab, opts 'Open: New Tab')
+        vim.keymap.set('n', '<C-v>', api.node.open.vertical, opts 'Open: Vertical Split')
+        vim.keymap.set('n', '<C-x>', api.node.open.horizontal, opts 'Open: Horizontal Split')
+        vim.keymap.set('n', '<BS>', api.node.navigate.parent_close, opts 'Close Directory')
+        vim.keymap.set('n', '<CR>', api.node.open.edit, opts 'Open')
+        vim.keymap.set('n', '<Tab>', api.node.open.preview, opts 'Open Preview')
+        vim.keymap.set('n', '>', api.node.navigate.sibling.next, opts 'Next Sibling')
+        vim.keymap.set('n', '<', api.node.navigate.sibling.prev, opts 'Previous Sibling')
+        vim.keymap.set('n', '.', api.node.run.cmd, opts 'Run Command')
+        vim.keymap.set('n', '-', api.tree.change_root_to_parent, opts 'Up')
+        vim.keymap.set('n', 'a', api.fs.create, opts 'Create File Or Directory')
+        vim.keymap.set('n', 'bd', api.marks.bulk.delete, opts 'Delete Bookmarked')
+        vim.keymap.set('n', 'bt', api.marks.bulk.trash, opts 'Trash Bookmarked')
+        vim.keymap.set('n', 'bmv', api.marks.bulk.move, opts 'Move Bookmarked')
+        vim.keymap.set('n', 'B', api.tree.toggle_no_buffer_filter, opts 'Toggle Filter: No Buffer')
+        vim.keymap.set('n', 'c', api.fs.copy.node, opts 'Copy')
+        vim.keymap.set('n', 'C', api.tree.toggle_git_clean_filter, opts 'Toggle Filter: Git Clean')
+        vim.keymap.set('n', '[c', api.node.navigate.git.prev, opts 'Prev Git')
+        vim.keymap.set('n', ']c', api.node.navigate.git.next, opts 'Next Git')
+        vim.keymap.set('n', 'd', api.fs.remove, opts 'Delete')
+        vim.keymap.set('n', 'D', api.fs.trash, opts 'Trash')
+        vim.keymap.set('n', 'E', api.tree.expand_all, opts 'Expand All')
+        vim.keymap.set('n', 'e', api.fs.rename_basename, opts 'Rename: Basename')
+        vim.keymap.set('n', ']e', api.node.navigate.diagnostics.next, opts 'Next Diagnostic')
+        vim.keymap.set('n', '[e', api.node.navigate.diagnostics.prev, opts 'Prev Diagnostic')
+        vim.keymap.set('n', 'F', api.live_filter.clear, opts 'Live Filter: Clear')
+        vim.keymap.set('n', 'f', api.live_filter.start, opts 'Live Filter: Start')
+        vim.keymap.set('n', 'g?', api.tree.toggle_help, opts 'Help')
+        vim.keymap.set('n', 'gy', api.fs.copy.absolute_path, opts 'Copy Absolute Path')
+        vim.keymap.set('n', 'ge', api.fs.copy.basename, opts 'Copy Basename')
+        vim.keymap.set('n', 'H', api.tree.toggle_hidden_filter, opts 'Toggle Filter: Dotfiles')
+        vim.keymap.set('n', 'I', api.tree.toggle_gitignore_filter, opts 'Toggle Filter: Git Ignore')
+        vim.keymap.set('n', 'J', api.node.navigate.sibling.last, opts 'Last Sibling')
+        vim.keymap.set('n', 'K', api.node.navigate.sibling.first, opts 'First Sibling')
+        vim.keymap.set('n', 'L', api.node.open.toggle_group_empty, opts 'Toggle Group Empty')
+        vim.keymap.set('n', 'M', api.tree.toggle_no_bookmark_filter, opts 'Toggle Filter: No Bookmark')
+        vim.keymap.set('n', 'm', api.marks.toggle, opts 'Toggle Bookmark')
+        vim.keymap.set('n', 'o', api.node.open.edit, opts 'Open')
+        vim.keymap.set('n', 'O', api.node.open.no_window_picker, opts 'Open: No Window Picker')
+        vim.keymap.set('n', 'p', api.fs.paste, opts 'Paste')
+        vim.keymap.set('n', 'P', api.node.navigate.parent, opts 'Parent Directory')
+        vim.keymap.set('n', 'q', api.tree.close, opts 'Close')
+        vim.keymap.set('n', 'r', api.fs.rename, opts 'Rename')
+        vim.keymap.set('n', 'R', api.tree.reload, opts 'Refresh')
+        vim.keymap.set('n', 's', api.node.run.system, opts 'Run System')
+        vim.keymap.set('n', 'S', api.tree.search_node, opts 'Search')
+        vim.keymap.set('n', 'u', api.fs.rename_full, opts 'Rename: Full Path')
+        vim.keymap.set('n', 'U', api.tree.toggle_custom_filter, opts 'Toggle Filter: Hidden')
+        vim.keymap.set('n', 'W', api.tree.collapse_all, opts 'Collapse')
+        vim.keymap.set('n', 'x', api.fs.cut, opts 'Cut')
+        vim.keymap.set('n', 'y', api.fs.copy.filename, opts 'Copy Name')
+        vim.keymap.set('n', 'Y', api.fs.copy.relative_path, opts 'Copy Relative Path')
+        vim.keymap.set('n', '<2-LeftMouse>', api.node.open.edit, opts 'Open')
+        vim.keymap.set('n', '<2-RightMouse>', api.tree.change_root_to_node, opts 'CD')
+      end,
+    },
+  },
+  {
+    'ray-x/go.nvim',
+    dependencies = { -- optional packages
+      'ray-x/guihua.lua',
+      'neovim/nvim-lspconfig',
+      'nvim-treesitter/nvim-treesitter',
+    },
+    config = function()
+      require('go').setup()
+    end,
+    event = { 'CmdlineEnter' },
+    ft = { 'go', 'gomod' },
+    build = ':lua require("go.install").update_all_sync()', -- if you need to install/update all binaries
+  },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
@@ -956,6 +1032,9 @@ require('lazy').setup({
     },
   },
 })
+
+-- Keymaps for NvimTree
+vim.keymap.set('n', '<leader>n', require('nvim-tree.api').tree.toggle, opts 'Toggle Tree')
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
