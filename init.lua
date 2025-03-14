@@ -136,6 +136,8 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
+local areKeysConfigured = false
+
 -- [[ Configure and install plugins ]]
 --
 --  To check the current status of your plugins, run
@@ -917,10 +919,12 @@ require('lazy').setup({
       local api = require 'nvim-tree.api'
       local view = require 'nvim-tree.view'
 
-      local opts = { buffer = true, silent = true } -- Define opts with buffer = true
-
+      local function opts(desc)
+        return { desc = 'nvim-tree: ' .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
+      end
       local function setup_nvim_tree_keymaps()
         if vim.bo.filetype == 'NvimTree' then
+          areKeysConfigured = true
           vim.keymap.set('n', '<C-e>', api.node.open.replace_tree_buffer, opts 'Open: In Place')
           vim.keymap.set('n', '<C-k>', api.node.show_info_popup, opts 'Info')
           vim.keymap.set('n', '<C-r>', api.fs.rename_sub, opts 'Rename: Omit Filename')
@@ -978,64 +982,65 @@ require('lazy').setup({
           vim.keymap.set('n', 'Y', api.fs.copy.relative_path, opts 'Copy Relative Path')
           vim.keymap.set('n', '<2-LeftMouse>', api.node.open.edit, opts 'Open')
           vim.keymap.set('n', '<2-RightMouse>', api.tree.change_root_to_node, opts 'CD')
-        else
-          vim.keymap.del('n', '<C-e>', api.node.open.replace_tree_buffer, opts 'Open: In Place')
-          vim.keymap.del('n', '<C-k>', api.node.show_info_popup, opts 'Info')
-          vim.keymap.del('n', '<C-r>', api.fs.rename_sub, opts 'Rename: Omit Filename')
-          vim.keymap.del('n', '<C-t>', api.node.open.tab, opts 'Open: New Tab')
-          vim.keymap.del('n', '<C-v>', api.node.open.vertical, opts 'Open: Vertical Split')
-          vim.keymap.del('n', '<C-x>', api.node.open.horizontal, opts 'Open: Horizontal Split')
-          vim.keymap.del('n', '<BS>', api.node.navigate.parent_close, opts 'Close Directory')
-          vim.keymap.del('n', '<CR>', api.node.open.edit, opts 'Open')
-          vim.keymap.del('n', '<Tab>', api.node.open.preview, opts 'Open Preview')
-          vim.keymap.del('n', '>', api.node.navigate.sibling.next, opts 'Next Sibling')
-          vim.keymap.del('n', '<', api.node.navigate.sibling.prev, opts 'Previous Sibling')
-          vim.keymap.del('n', '.', api.node.run.cmd, opts 'Run Command')
-          vim.keymap.del('n', '-', api.tree.change_root_to_parent, opts 'Up')
-          vim.keymap.del('n', 'a', api.fs.create, opts 'Create File Or Directory')
-          vim.keymap.del('n', 'bd', api.marks.bulk.delete, opts 'Delete Bookmarked')
-          vim.keymap.del('n', 'bt', api.marks.bulk.trash, opts 'Trash Bookmarked')
-          vim.keymap.del('n', 'bmv', api.marks.bulk.move, opts 'Move Bookmarked')
-          vim.keymap.del('n', 'B', api.tree.toggle_no_buffer_filter, opts 'Toggle Filter: No Buffer')
-          vim.keymap.del('n', 'c', api.fs.copy.node, opts 'Copy')
-          vim.keymap.del('n', 'C', api.tree.toggle_git_clean_filter, opts 'Toggle Filter: Git Clean')
-          vim.keymap.del('n', '[c', api.node.navigate.git.prev, opts 'Prev Git')
-          vim.keymap.del('n', ']c', api.node.navigate.git.next, opts 'Next Git')
-          vim.keymap.del('n', 'd', api.fs.remove, opts 'Delete')
-          vim.keymap.del('n', 'D', api.fs.trash, opts 'Trash')
-          vim.keymap.del('n', 'E', api.tree.expand_all, opts 'Expand All')
-          vim.keymap.del('n', 'e', api.fs.rename_basename, opts 'Rename: Basename')
-          vim.keymap.del('n', ']e', api.node.navigate.diagnostics.next, opts 'Next Diagnostic')
-          vim.keymap.del('n', '[e', api.node.navigate.diagnostics.prev, opts 'Prev Diagnostic')
-          vim.keymap.del('n', 'F', api.live_filter.clear, opts 'Live Filter: Clear')
-          vim.keymap.del('n', 'f', api.live_filter.start, opts 'Live Filter: Start')
-          vim.keymap.del('n', 'g?', api.tree.toggle_help, opts 'Help')
-          vim.keymap.del('n', 'gy', api.fs.copy.absolute_path, opts 'Copy Absolute Path')
-          vim.keymap.del('n', 'ge', api.fs.copy.basename, opts 'Copy Basename')
-          vim.keymap.del('n', 'H', api.tree.toggle_hidden_filter, opts 'Toggle Filter: Dotfiles')
-          vim.keymap.del('n', 'I', api.tree.toggle_gitignore_filter, opts 'Toggle Filter: Git Ignore')
-          vim.keymap.del('n', 'J', api.node.navigate.sibling.last, opts 'Last Sibling')
-          vim.keymap.del('n', 'K', api.node.navigate.sibling.first, opts 'First Sibling')
-          vim.keymap.del('n', 'L', api.node.open.toggle_group_empty, opts 'Toggle Group Empty')
-          vim.keymap.del('n', 'M', api.tree.toggle_no_bookmark_filter, opts 'Toggle Filter: No Bookmark')
-          vim.keymap.del('n', 'm', api.marks.toggle, opts 'Toggle Bookmark')
-          vim.keymap.del('n', 'o', api.node.open.edit, opts 'Open')
-          vim.keymap.del('n', 'O', api.node.open.no_window_picker, opts 'Open: No Window Picker')
-          vim.keymap.del('n', 'p', api.fs.paste, opts 'Paste')
-          vim.keymap.del('n', 'P', api.node.navigate.parent, opts 'Parent Directory')
-          vim.keymap.del('n', 'q', api.tree.close, opts 'Close')
-          vim.keymap.del('n', 'r', api.fs.rename, opts 'Rename')
-          vim.keymap.del('n', 'R', api.tree.reload, opts 'Refresh')
-          vim.keymap.del('n', 's', api.node.run.system, opts 'Run System')
-          vim.keymap.del('n', 'S', api.tree.search_node, opts 'Search')
-          vim.keymap.del('n', 'u', api.fs.rename_full, opts 'Rename: Full Path')
-          vim.keymap.del('n', 'U', api.tree.toggle_custom_filter, opts 'Toggle Filter: Hidden')
-          vim.keymap.del('n', 'W', api.tree.collapse_all, opts 'Collapse')
-          vim.keymap.del('n', 'x', api.fs.cut, opts 'Cut')
-          vim.keymap.del('n', 'y', api.fs.copy.filename, opts 'Copy Name')
-          vim.keymap.del('n', 'Y', api.fs.copy.relative_path, opts 'Copy Relative Path')
-          vim.keymap.del('n', '<2-LeftMouse>', api.node.open.edit, opts 'Open')
-          vim.keymap.del('n', '<2-RightMouse>', api.tree.change_root_to_node, opts 'CD')
+        elseif areKeysConfigured then
+          areKeysConfigured = false
+          vim.keymap.del('n', '<C-e>')
+          vim.keymap.del('n', '<C-k>')
+          vim.keymap.del('n', '<C-r>')
+          vim.keymap.del('n', '<C-t>')
+          vim.keymap.del('n', '<C-v>')
+          vim.keymap.del('n', '<C-x>')
+          vim.keymap.del('n', '<BS>')
+          vim.keymap.del('n', '<CR>')
+          vim.keymap.del('n', '<Tab>')
+          vim.keymap.del('n', '>')
+          vim.keymap.del('n', '<')
+          vim.keymap.del('n', '.')
+          vim.keymap.del('n', '-')
+          vim.keymap.del('n', 'a')
+          vim.keymap.del('n', 'bd')
+          vim.keymap.del('n', 'bt')
+          vim.keymap.del('n', 'bmv')
+          vim.keymap.del('n', 'B')
+          vim.keymap.del('n', 'c')
+          vim.keymap.del('n', 'C')
+          vim.keymap.del('n', '[c')
+          vim.keymap.del('n', ']c')
+          vim.keymap.del('n', 'd')
+          vim.keymap.del('n', 'D')
+          vim.keymap.del('n', 'E')
+          vim.keymap.del('n', 'e')
+          vim.keymap.del('n', ']e')
+          vim.keymap.del('n', '[e')
+          vim.keymap.del('n', 'F')
+          vim.keymap.del('n', 'f')
+          vim.keymap.del('n', 'g?')
+          vim.keymap.del('n', 'gy')
+          vim.keymap.del('n', 'ge')
+          vim.keymap.del('n', 'H')
+          vim.keymap.del('n', 'I')
+          vim.keymap.del('n', 'J')
+          vim.keymap.del('n', 'K')
+          vim.keymap.del('n', 'L')
+          vim.keymap.del('n', 'M')
+          vim.keymap.del('n', 'm')
+          vim.keymap.del('n', 'o')
+          vim.keymap.del('n', 'O')
+          vim.keymap.del('n', 'p')
+          vim.keymap.del('n', 'P')
+          vim.keymap.del('n', 'q')
+          vim.keymap.del('n', 'r')
+          vim.keymap.del('n', 'R')
+          vim.keymap.del('n', 's')
+          vim.keymap.del('n', 'S')
+          vim.keymap.del('n', 'u')
+          vim.keymap.del('n', 'U')
+          vim.keymap.del('n', 'W')
+          vim.keymap.del('n', 'x')
+          vim.keymap.del('n', 'y')
+          vim.keymap.del('n', 'Y')
+          vim.keymap.del('n', '<2-LeftMouse>')
+          vim.keymap.del('n', '<2-RightMouse>')
         end
       end
 
@@ -1043,6 +1048,8 @@ require('lazy').setup({
       vim.api.nvim_create_autocmd({ 'BufEnter', 'WinEnter', 'BufLeave', 'WinLeave' }, {
         callback = setup_nvim_tree_keymaps,
       })
+
+      require('nvim-tree').setup {}
     end,
     opts = {
       on_attach = function()
@@ -1057,10 +1064,6 @@ require('lazy').setup({
         vim.keymap.set('n', '<leader>n', require('nvim-tree.api').tree.toggle, opts 'Toggle Tree')
       end,
     },
-  },
-  {
-    'mfussenegger/nvim-dap',
-    opts = {},
   },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
@@ -1112,6 +1115,9 @@ require('lazy').setup({
 })
 
 -- Keymaps for NvimTree
-
+local function opts(desc)
+  return { desc = 'nvim-tree: ' .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
+end
+vim.keymap.set('n', '<leader>n', require('nvim-tree.api').tree.toggle, opts 'Toggle Tree')
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
