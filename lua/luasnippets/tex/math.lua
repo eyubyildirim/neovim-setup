@@ -47,4 +47,38 @@ return {
     )
   ),
   s('tii', fmta('\\texit{<>}', { d(1, get_visual) })),
+  s(
+    'fig',
+    fmta(
+      [[
+  \begin{figure}[H]
+      \centering
+      \includegraphics[width=<>\linewidth]{<>}
+      \caption{<>}
+      \label{fig:<>}
+  \end{figure}
+  ]],
+      {
+        i(1),
+        i(2),
+        i(3),
+        i(4),
+      }
+    )
+  ),
+  s(
+    'split',
+    fmta(
+      [[
+    \begin{split}
+        <> \\
+        <>
+    \end{split}
+    ]],
+      {
+        d(1, get_visual),
+        i(2),
+      }
+    )
+  ),
 }

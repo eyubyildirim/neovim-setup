@@ -55,4 +55,5 @@ return {
   s({ trig = ';vph', snippetType = 'autosnippet' }, { t '\\varphi' }),
   s({ trig = ';vs', snippetType = 'autosnippet' }, { t '\\varsigma' }),
   s({ trig = ';ve', snippetType = 'autosnippet' }, { t '\\varepsilon' }),
+  s({ trig = 'apx', snippetType = 'autosnippet' }, { t '\\approx' }),
 }
