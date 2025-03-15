@@ -4,6 +4,9 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+vim.cmd 'filetype on'
+vim.cmd 'syntax on'
+
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
@@ -691,6 +694,7 @@ require('lazy').setup({
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
         go = { 'gofumpt' },
+        tex = { 'latexindent' },
       },
     },
   },
@@ -736,7 +740,11 @@ require('lazy').setup({
       -- See `:help cmp`
       local cmp = require 'cmp'
       local luasnip = require 'luasnip'
-      luasnip.config.setup {}
+      luasnip.config.setup {
+        enable_autosnippets = true,
+        store_selection_keys = '<Tab>',
+        update_events = 'TextChanged,TextChangedI',
+      }
 
       cmp.setup {
         snippet = {
@@ -770,7 +778,7 @@ require('lazy').setup({
           ['<CR>'] = cmp.mapping.confirm { select = true },
           ['<Tab>'] = cmp.mapping.select_next_item(),
           ['<S-Tab>'] = cmp.mapping.select_prev_item(),
-
+          ['<Esc>'] = cmp.mapping.close(),
           -- Manually trigger a completion from nvim-cmp.
           --  Generally you don't need this, because nvim-cmp will display
           --  completions whenever it has completion options available.
@@ -1065,7 +1073,13 @@ require('lazy').setup({
       end,
     },
   },
-
+  {
+    'lervag/vimtex',
+    lazy = false,
+    init = function()
+      vim.g.vimtex_view_method = 'zathura'
+    end,
+  },
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -1119,5 +1133,14 @@ local function opts(desc)
   return { desc = 'nvim-tree: ' .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
 end
 vim.keymap.set('n', '<leader>n', require('nvim-tree.api').tree.toggle, opts 'Toggle Tree')
+require('nvim-treesitter.configs').setup {
+  ensure_installed = { 'markdown' },
+  highlight = {
+    enable = true,
+    disable = { 'latex' },
+    additional_vim_regex_highlighting = { 'latex', 'markdown' },
+  },
+  --other treesitter settings
+}
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
