@@ -1,6 +1,7 @@
 return {
   'mfussenegger/nvim-dap',
   opts = {},
+  event = 'InsertEnter',
   config = function()
     vim.keymap.set('n', '<Leader>dc', function()
       require('dap').continue()
