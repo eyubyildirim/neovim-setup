@@ -84,8 +84,14 @@ vim.opt.scrolloff = 10
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 vim.keymap.set('n', '<leader>cc', '<cmd>bd<CR>', { desc = '[C]lose [C]urrent Buffer' })
-
 vim.keymap.set('i', '<C-z>', '<cmd>u<CR>', { desc = '[U]ndo' })
+
+vim.keymap.set('n', '<A-o>', function()
+  vim.cmd [[normal o]]
+end)
+vim.keymap.set('n', '<A-S-o>', function()
+  vim.cmd [[normal O]]
+end)
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
@@ -695,7 +701,6 @@ require('lazy').setup({
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
         go = { 'gofmt', 'goimports' },
         tex = { 'latexindent' },
-        matlab = { 'matlab_ls' },
       },
     },
   },
@@ -1088,6 +1093,11 @@ require('lazy').setup({
   },
   {
     'tpope/vim-fugitive',
+    opts = {},
+    config = function() end,
+  },
+  {
+    'prisma/vim-prisma',
     opts = {},
     config = function() end,
   },
