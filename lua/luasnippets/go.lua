@@ -10,8 +10,16 @@ local fmt = require('luasnip.extras.fmt').fmt
 local fmta = require('luasnip.extras.fmt').fmta
 local rep = require('luasnip.extras').rep
 
-return {
-  s('main', {
-    t 'func main() {}',
-  }),
-}
+return { s(
+  'main',
+  fmta(
+    [[
+      func main() {
+        <>
+      }
+ ]],
+    {
+      i(1),
+    }
+  )
+) }
