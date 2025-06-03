@@ -19,7 +19,7 @@ local get_visual = function(args, parent)
 end
 
 return {
-  s({ trig = 'ff' }, fmta('\\frac{<>}{<>}', { i(1), i(2) })),
+  s({ trig = 'ff' }, fmta('\\frac{<>}{<>}', { d(1, get_visual), i(2) })),
   s(
     { trig = 'eq' },
     fmta(

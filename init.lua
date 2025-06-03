@@ -10,7 +10,6 @@ vim.cmd 'syntax on'
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
-vim.cmd 'colorscheme slate'
 -- [[ Setting options ]]
 -- See `:help vim.opt`
 -- NOTE: You can change these options as you wish!
@@ -606,7 +605,20 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        ts_ls = {},
+        ts_ls = {
+          filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+          init_options = {
+            plugins = {
+              {
+                name = '@vue/typescript-plugin',
+                location = '/usr/lib/node_modules/@vue/typescript-plugin/',
+                languages = { 'vue' },
+              },
+            },
+          },
+        },
+        jdtls = {},
+        tailwindcss = {},
         --
         matlab_ls = {},
         lua_ls = {
@@ -699,7 +711,8 @@ require('lazy').setup({
         -- python = { "isort", "black" },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
-        -- javascript = { "prettierd", "prettier", stop_after_first = true },
+        javascript = { 'prettierd', 'prettier', stop_after_first = true },
+        typescript = { 'prettierd', 'prettier', 'vue_ls', stop_after_first = true },
         go = { 'gofmt', 'goimports' },
         tex = { 'latexindent' },
       },
@@ -742,11 +755,13 @@ require('lazy').setup({
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
       'hrsh7th/cmp-nvim-lsp-signature-help',
+      'mlaursen/vim-react-snippets',
     },
     config = function()
       -- See `:help cmp`
       local cmp = require 'cmp'
       local luasnip = require 'luasnip'
+      require('vim-react-snippets').lazy_load()
       luasnip.config.setup {
         enable_autosnippets = true,
         store_selection_keys = '<Tab>',
@@ -828,25 +843,25 @@ require('lazy').setup({
     end,
   },
 
-  -- { -- You can easily change to a different colorscheme.
-  --   -- Change the name of the colorscheme plugin below, and then
-  --   -- change the command in the config to whatever the name of that colorscheme is.
-  --   --
-  --   -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-  --   'catppuccin/nvim',
-  --   priority = 1000, -- Make sure to load this before all the other start plugins.
-  --   config = function()
-  --     ---@diagnostic disable-next-line: missing-fields
-  --     require('catppuccin').setup {
-  --       styles = {},
-  --     }
-  --
-  --     -- Load the colorscheme here.
-  --     -- Like many other themes, this one has different styles, and you could load
-  --     -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-  --     vim.cmd.colorscheme 'catppuccin-frappe'
-  --   end,
-  -- },
+  { -- You can easily change to a different colorscheme.
+    -- Change the name of the colorscheme plugin below, and then
+    -- change the command in the config to whatever the name of that colorscheme is.
+    --
+    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+    'catppuccin/nvim',
+    priority = 1000, -- Make sure to load this before all the other start plugins.
+    config = function()
+      ---@diagnostic disable-next-line: missing-fields
+      require('catppuccin').setup {
+        styles = {},
+      }
+
+      -- Load the colorscheme here.
+      -- Like many other themes, this one has different styles, and you could load
+      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
+      vim.cmd.colorscheme 'catppuccin-frappe'
+    end,
+  },
 
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
@@ -1102,6 +1117,15 @@ require('lazy').setup({
     opts = {},
     config = function() end,
   },
+  {
+    'windwp/nvim-ts-autotag',
+    event = 'InsertEnter',
+    opts = {
+      filetypes = { 'html', 'javascriptreact', 'typescriptreact', 'svelte', 'vue' }, -- default
+
+      -- other opts see README.md
+    },
+  },
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -1154,6 +1178,7 @@ require('lazy').setup({
 local function opts(desc)
   return { desc = 'nvim-tree: ' .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
 end
+
 vim.keymap.set('n', '<leader>n', require('nvim-tree.api').tree.toggle, opts 'Toggle Tree')
 require('nvim-treesitter.configs').setup {
   ensure_installed = { 'markdown' },
@@ -1164,5 +1189,9 @@ require('nvim-treesitter.configs').setup {
   },
   --other treesitter settings
 }
+
+-- You must make sure the Vue language server is setup
+-- e.g. vim.lsp.config('vue_ls')
+-- See vue_ls's section for more information
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
