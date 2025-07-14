@@ -10,9 +10,9 @@ return {
         auto_trigger = true,
         debounce = 75,
         keymap = {
-          accept = '<C-k>', -- Tip: Chose a less common binding for accept
-          accept_word = false,
-          accept_line = false,
+          accept = '<C-e>',
+          accept_word = '<C-w>',
+          accept_line = '<C-l>',
           next = '<M-]>',
           prev = '<M-[>',
           dismiss = '<C-]>',

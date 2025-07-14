@@ -15,6 +15,11 @@ vim.g.have_nerd_font = true
 -- NOTE: You can change these options as you wish!
 --  For more options, you can see `:help option-list`
 
+-- Global Folding Settings (Indent based)
+-- vim.opt.foldmethod = 'indent'     -- Use indentation for folding
+-- vim.opt.foldenable = true         -- Enable folding by default
+-- vim.opt.foldlevel = 99            -- Start with all folds open (change to 0 to start closed)
+
 -- Make line numbers default
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
@@ -597,6 +602,7 @@ require('lazy').setup({
             },
           },
         },
+        postgrestools = {},
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -611,7 +617,7 @@ require('lazy').setup({
             plugins = {
               {
                 name = '@vue/typescript-plugin',
-                location = '/usr/lib/node_modules/@vue/typescript-plugin/',
+                location = '/Users/eyubyildirim/.npm-global/lib/',
                 languages = { 'vue' },
               },
             },
@@ -909,7 +915,35 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = {
+        'bash',
+        'c',
+        'diff',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'query',
+        'vim',
+        'vimdoc',
+        'go',
+        'javascript',
+        'typescript',
+        'tsx',
+        'json',
+        'yaml',
+        'css',
+        'scss',
+        'rust',
+        'python',
+        'java',
+        'kotlin',
+        'php',
+        'ruby',
+        'vue',
+        'matlab',
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -919,7 +953,11 @@ require('lazy').setup({
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
         additional_vim_regex_highlighting = { 'ruby' },
       },
+      folds = { enable = true },
       indent = { enable = true, disable = { 'ruby' } },
+      config = function(_, opts)
+        require('nvim-treesitter.configs').setup(opts)
+      end,
     },
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:
@@ -1118,6 +1156,32 @@ require('lazy').setup({
     config = function() end,
   },
   {
+    'ray-x/go.nvim',
+    dependencies = { -- optional packages
+      'ray-x/guihua.lua',
+      'neovim/nvim-lspconfig',
+      'nvim-treesitter/nvim-treesitter',
+    },
+    opts = {
+      -- lsp_keymaps = false,
+      -- other options
+    },
+    config = function(lp, opts)
+      require('go').setup(opts)
+      local format_sync_grp = vim.api.nvim_create_augroup('GoFormat', {})
+      vim.api.nvim_create_autocmd('BufWritePre', {
+        pattern = '*.go',
+        callback = function()
+          require('go.format').goimports()
+        end,
+        group = format_sync_grp,
+      })
+    end,
+    event = { 'CmdlineEnter' },
+    ft = { 'go', 'gomod' },
+    build = ':lua require("go.install").update_all_sync()', -- if you need to install/update all binaries
+  },
+  {
     'windwp/nvim-ts-autotag',
     event = 'InsertEnter',
     opts = {
@@ -1190,6 +1254,39 @@ require('nvim-treesitter.configs').setup {
   --other treesitter settings
 }
 
+local function get_custom_foldtxt_suffix(foldstart)
+  local fold_suffix_str = string.format('  %s [%s lines]', '┉', vim.v.foldend - foldstart + 1)
+
+  return { fold_suffix_str, 'Folded' }
+end
+
+local function get_custom_foldtext(foldtxt_suffix, foldstart)
+  local line = vim.api.nvim_buf_get_lines(0, foldstart - 1, foldstart, false)[1]
+
+  return {
+    { line, 'Normal' },
+    foldtxt_suffix,
+  }
+end
+
+_G.get_foldtext = function()
+  local foldstart = vim.v.foldstart
+  local ts_foldtxt = vim.fn.foldtext()
+  local foldtxt_suffix = get_custom_foldtxt_suffix(foldstart)
+
+  if type(ts_foldtxt) == 'string' then
+    return get_custom_foldtext(foldtxt_suffix, foldstart)
+  else
+    table.insert(ts_foldtxt, foldtxt_suffix)
+    return ts_foldtxt
+  end
+end
+
+vim.opt.foldtext = 'v:lua.get_foldtext()'
+vim.opt.foldlevel = 99 -- Using treesitter for folding, so set a high default fold level
+vim.opt.foldmethod = 'expr'
+vim.opt.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+-- vim.opt.foldtext = 'v:lua.vim.treesitter.foldtext()'
 -- You must make sure the Vue language server is setup
 -- e.g. vim.lsp.config('vue_ls')
 -- See vue_ls's section for more information
