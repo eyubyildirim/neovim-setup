@@ -625,8 +625,6 @@ require('lazy').setup({
         },
         jdtls = {},
         tailwindcss = {},
-        --
-        matlab_ls = {},
         lua_ls = {
           -- cmd = { ... },
           -- filetypes = { ... },
@@ -912,7 +910,7 @@ require('lazy').setup({
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
-    main = 'nvim-treesitter.configs', -- Sets main module to use for opts
+    main = 'nvim-treesitter', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
       ensure_installed = {
@@ -942,7 +940,6 @@ require('lazy').setup({
         'php',
         'ruby',
         'vue',
-        'matlab',
       },
       -- Autoinstall languages that are not installed
       auto_install = true,
@@ -1190,6 +1187,38 @@ require('lazy').setup({
       -- other opts see README.md
     },
   },
+  {
+    'supermaven-inc/supermaven-nvim',
+    config = function()
+      require('supermaven-nvim').setup {
+        keymaps = {
+          accept_suggestion = '<C-E>',
+          clear_suggestion = '<C-]>',
+          accept_word = '<C-j>',
+        },
+      }
+    end,
+  },
+  {
+    'kdheepak/lazygit.nvim',
+    lazy = true,
+    cmd = {
+      'LazyGit',
+      'LazyGitConfig',
+      'LazyGitCurrentFile',
+      'LazyGitFilter',
+      'LazyGitFilterCurrentFile',
+    },
+    -- optional for floating window border decoration
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    -- setting the keybinding for LazyGit with 'keys' is recommended in
+    -- order to load the plugin when the command is run for the first time
+    keys = {
+      { '<leader>gg', '<cmd>LazyGit<cr>', desc = 'LazyGit' },
+    },
+  },
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -1244,7 +1273,7 @@ local function opts(desc)
 end
 
 vim.keymap.set('n', '<leader>n', require('nvim-tree.api').tree.toggle, opts 'Toggle Tree')
-require('nvim-treesitter.configs').setup {
+require('nvim-treesitter').setup {
   ensure_installed = { 'markdown' },
   highlight = {
     enable = true,
