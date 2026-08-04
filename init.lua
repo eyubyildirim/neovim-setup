@@ -611,6 +611,20 @@ require('lazy').setup({
             '--header-insertion=iwyu',
           },
         },
+        -- Zig. Installed via Homebrew rather than Mason -- see `mason_ignore` below.
+        zls = {
+          settings = {
+            zls = {
+              -- Run `zig build` on save so you get real compiler diagnostics
+              -- (type errors, unreachable code) and not just parse errors.
+              -- Requires a build.zig in the project; harmless without one.
+              enable_build_on_save = true,
+              semantic_tokens = 'partial',
+              inlay_hints_show_parameter_name = true,
+              inlay_hints_show_builtin = true,
+            },
+          },
+        },
         gopls = {
           settings = {
             gopls = {
@@ -680,10 +694,20 @@ require('lazy').setup({
       --
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
-      local ensure_installed = vim.tbl_keys(servers or {})
+      -- zls is version-locked to the Zig compiler it was built against, so it
+      -- comes from Homebrew alongside `zig` (the formula depends on it) instead
+      -- of Mason, whose copy would drift out of sync on the next Zig release.
+      local mason_ignore = { zls = true }
+
+      local ensure_installed = {}
+      for server_name in pairs(servers) do
+        if not mason_ignore[server_name] then
+          table.insert(ensure_installed, server_name)
+        end
+      end
       vim.list_extend(ensure_installed, {
         'clang-format', -- Used to format C and C++ code
-        'codelldb', -- Used to debug C and C++ code
+        'codelldb', -- Used to debug C, C++ and Zig code
         'stylua', -- Used to format Lua code
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -701,6 +725,12 @@ require('lazy').setup({
         automatic_installation = false,
         automatic_enable = true, -- v2 enables every Mason-installed server for us
       }
+
+      -- Anything in `mason_ignore` is not Mason-installed, so `automatic_enable`
+      -- above does not cover it -- enable it by hand.
+      for server_name in pairs(mason_ignore) do
+        vim.lsp.enable(server_name)
+      end
     end,
   },
 
@@ -739,6 +769,7 @@ require('lazy').setup({
       formatters_by_ft = {
         c = { 'clang_format' },
         cpp = { 'clang_format' },
+        zig = { 'zigfmt' }, -- `zig fmt`: canonical, no options, no bikeshedding
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
@@ -966,6 +997,7 @@ require('lazy').setup({
         'css',
         'scss',
         'rust',
+        'zig',
         'python',
         'java',
         'kotlin',
