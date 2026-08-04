@@ -1,10 +1,24 @@
 return {
   'mfussenegger/nvim-dap',
   opts = {},
-  event = 'InsertEnter',
+  event = 'VeryLazy',
   config = function()
+    local dap = require 'dap'
+    local dapui = require 'dapui'
+
+    require('mason-nvim-dap').setup {
+      automatic_installation = true,
+      handlers = {},
+      ensure_installed = { 'codelldb', 'delve' },
+    }
+
+    dapui.setup {}
+    dap.listeners.after.event_initialized['dapui_config'] = dapui.open
+    dap.listeners.before.event_terminated['dapui_config'] = dapui.close
+    dap.listeners.before.event_exited['dapui_config'] = dapui.close
+
     vim.keymap.set('n', '<Leader>dc', function()
-      require('dap').continue()
+      dap.continue()
     end, { desc = '[D]ebug [C]ontinue' })
     vim.keymap.set('n', '<Leader>do', function()
       require('dap').step_over()
@@ -45,7 +59,7 @@ return {
       widgets.centered_float(widgets.scopes)
     end, { desc = '[D]ebug [C]entered [F]loat [W]idgets' })
 
-    require('dap').adapters.go = {
+    dap.adapters.go = {
       type = 'server',
       port = '${port}',
       executable = {
@@ -54,7 +68,7 @@ return {
       },
     }
 
-    require('dap').configurations.go = {
+    dap.configurations.go = {
       {
         name = 'Launch Package',
         type = 'go',
@@ -62,5 +76,29 @@ return {
         program = '${fileDirname}',
       },
     }
+
+    dap.adapters.codelldb = {
+      type = 'server',
+      port = '${port}',
+      executable = {
+        command = 'codelldb',
+        args = { '--port', '${port}' },
+      },
+    }
+
+    local c_cpp_configuration = {
+      name = 'Launch executable',
+      type = 'codelldb',
+      request = 'launch',
+      program = function()
+        return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+      end,
+      cwd = '${workspaceFolder}',
+      stopOnEntry = false,
+    }
+
+    dap.configurations.c = { c_cpp_configuration }
+    dap.configurations.cpp = { c_cpp_configuration }
+    dap.configurations.make = { c_cpp_configuration }
   end,
 }
