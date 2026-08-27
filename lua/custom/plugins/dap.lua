@@ -86,19 +86,25 @@ return {
       },
     }
 
-    local c_cpp_configuration = {
-      name = 'Launch executable',
-      type = 'codelldb',
-      request = 'launch',
-      program = function()
-        return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
-      end,
-      cwd = '${workspaceFolder}',
-      stopOnEntry = false,
-    }
+    -- codelldb works on anything that emits DWARF, which includes Zig, so the
+    -- same launch configuration serves every native language here.
+    local function native_configuration(default_dir)
+      return {
+        name = 'Launch executable',
+        type = 'codelldb',
+        request = 'launch',
+        program = function()
+          return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. default_dir, 'file')
+        end,
+        cwd = '${workspaceFolder}',
+        stopOnEntry = false,
+      }
+    end
 
-    dap.configurations.c = { c_cpp_configuration }
-    dap.configurations.cpp = { c_cpp_configuration }
-    dap.configurations.make = { c_cpp_configuration }
+    dap.configurations.c = { native_configuration '/' }
+    dap.configurations.cpp = { native_configuration '/' }
+    dap.configurations.make = { native_configuration '/' }
+    -- `zig build` drops binaries in zig-out/bin, so start the prompt there.
+    dap.configurations.zig = { native_configuration '/zig-out/bin/' }
   end,
 }
